@@ -7,6 +7,7 @@
 #include <deque>
 #include <sstream>
 #include <stdexcept>
+#include <ostream>
 
 
 /**
@@ -120,7 +121,7 @@ namespace mparith {
 
 	public:
 		Integer() noexcept;
-		Integer(const std::string &str) noexcept;
+		Integer(const std::string &str);
 
 	private:
 		template<size_t Bits_Cnt>
@@ -232,6 +233,11 @@ namespace mparith {
 		std::string Serialize() const noexcept;
 		static Integer Deserialize(const std::string &str);
 
+		friend std::ostream &operator<<(std::ostream &ostream, const Integer &integer) {
+			ostream << integer.Serialize();
+			return ostream;
+		};
+
 	////// END DECLARATION Integer Serialization
 
 
@@ -336,7 +342,7 @@ namespace mparith {
 	}
 
 	template<t_Width Width>
-	Integer<Width>::Integer(const std::string &str) noexcept {
+	Integer<Width>::Integer(const std::string &str) {
 		(*this) = Deserialize(str);
 	}
 
@@ -358,7 +364,6 @@ namespace mparith {
 	template<t_Width Rhs_Width>
 	Integer<Width>::Integer(const Integer<Rhs_Width> &rhs) noexcept : _bits(rhs._bits) {
 		Assert_Valid_Assignment_Widths<Rhs_Width>();
-		//static_assert(Width >= Rhs_Width);
 	}
 
 	template<t_Width Width>
@@ -767,6 +772,10 @@ namespace mparith {
 			throw ArithmeticException{"Factorial Of Negative Number"};
 		}
 
+		if (*this == kZero || *this == kOne) {
+			return kOne;
+		}
+
 		bool overflow_flag = false;
 
 		Integer result{*this};
@@ -854,6 +863,12 @@ namespace mparith {
 			return result.Get_Complement();
 		}
 	}
+
+	/*template<t_Width Width>
+	std::ostream &operator<<(std::ostream &ostream, const Integer<Width> &integer) {
+		ostream << integer.Serialize();
+		return ostream;
+	}*/
 
 	////// END DEFINITION Integer Serialization
 
