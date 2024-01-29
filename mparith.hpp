@@ -4,7 +4,6 @@
 #include <vector>
 #include <algorithm>
 #include <stack>
-#include <deque>
 #include <sstream>
 #include <stdexcept>
 #include <ostream>
@@ -807,7 +806,7 @@ namespace mparith {
 			return "0";
 		}
 
-		std::stack<const char, std::deque<const char>> stack;
+		std::stack<char> stack;
 		for (; copy != kZero; copy /= kTen) {
 			const Integer mod = copy % kTen;
 			std::bitset<kWord_Bits_Cnt> bitset;
