@@ -15,16 +15,24 @@
 namespace mparith {
 
 
-	///// BEGIN DECLARATION Types
+	// BEGIN DECLARATION Types
 
 	/**
 	 * Number Width Type
 	 */
 	using t_Width = size_t;
 
+	/**
+	 * Arbitrary Arithmetic Error
+	 */
 	class ArithmeticException : public std::runtime_error {
 	public:
-		explicit ArithmeticException(const std::string &msg) noexcept : std::runtime_error(msg) {
+		/**
+		 * Transparently constructs
+		 * @param msg Message
+		 */
+		explicit ArithmeticException(const std::string &msg) noexcept :
+			std::runtime_error(msg) {
 			//
 		}
 
@@ -32,14 +40,26 @@ namespace mparith {
 
 	template<t_Width Width>
 	class Integer;
-
+	/**
+	 * Overflow Error
+	 * @tparam Result_Width Integer Width
+	 */
 	template<t_Width Result_Width>
 	class OverflowException : public ArithmeticException {
 	public:
-		explicit OverflowException(const Integer<Result_Width> &result) : ArithmeticException("Overflow Detected [" + result.Serialize() + "]"), _result(result) {
+		/**
+		 * Transparently constructs
+		 * @param result Overflowed Result
+		 */
+		explicit OverflowException(const Integer<Result_Width> &result) noexcept :
+			ArithmeticException("Overflow Detected [" + result.Serialize() + "]"), _result(result) {
 			//
 		}
 
+		/**
+		 * Returns the overflowed result
+		 * @return Overflowed Result
+		 */
 		const Integer<Result_Width> &Get_Result() const noexcept {
 			return _result;
 		};
@@ -49,10 +69,10 @@ namespace mparith {
 
 	};
 
-	///// END DECLARATION Types
+	// END DECLARATION Types
 
 
-	///// BEGIN DECLARATION Constants
+	// BEGIN DECLARATION Constants
 
 	/**
 	 * Unlimited Number Width Specifier
@@ -69,10 +89,10 @@ namespace mparith {
 	 */
 	constexpr size_t kWord_Bits_Cnt = 8;
 
-	///// END DECLARATION Constants
+	// END DECLARATION Constants
 
 
-	///// BEGIN DECLARATION Util Functions
+	// BEGIN DECLARATION Util Functions
 
 	/**
 	 * Returns the max of the two parameters
@@ -89,10 +109,10 @@ namespace mparith {
 	 */
 	consteval bool Is_Unlimited(t_Width width) noexcept;
 
-	///// END DECLARATION Util Functions
+	// END DECLARATION Util Functions
 
 
-	///// BEGIN DECLARATION Integer
+	// BEGIN DECLARATION Integer
 
 	/**
 	 * Multi-precision Signed Integer Type
@@ -108,139 +128,360 @@ namespace mparith {
 		template<t_Width Width_> friend class Integer;
 
 
-	////// BEGIN DECLARATION Integer Constants
+	// BEGIN DECLARATION Integer Constants
 
-	public:
+	private:
+		/**
+		 * Integer Bits Count
+		 */
 		static constexpr size_t kBits_Cnt = Width * kWord_Bits_Cnt;
 
-	////// END DECLARATION Integer Constants
+	// END DECLARATION Integer Constants
 
 
-	////// BEGIN DECLARATION Integer Constructors, Copy, Move, Destructors
+	// BEGIN DECLARATION Integer Constructors, Copy, Move, Destructors
 
 	public:
+		/**
+		 * Constructs empty Width wide integer
+		 */
 		Integer() noexcept;
+		/**
+		 * Constructs integer from its string representation
+		 * Expects valid number string otherwise behaves undefined
+		 * @param str Integer String
+		 */
 		Integer(const std::string &str);
 
 	private:
+		/**
+		 * Constructs integer from its bits representation
+		 * @tparam Bits_Cnt Bitset bits
+		 * @param bitset Bitset
+		 */
 		template<size_t Bits_Cnt>
 		Integer(const std::bitset<Bits_Cnt> &bitset) noexcept;
 
 	public:
+		/**
+		 * Copy constructs lhs from rhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer(const Integer<Rhs_Width> &rhs) noexcept;
+		/**
+		 * Copy assigns rhs to lhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return lhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer &operator=(const Integer<Rhs_Width> &rhs) noexcept;
 
+		/**
+		 * Move constructs lhs from rhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer(Integer<Rhs_Width> &&rhs) noexcept;
+		/**
+		 * Move assigns rhs to lhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return lhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer &operator=(Integer<Rhs_Width> &&rhs) noexcept;
 
+		/**
+		 * Transparently destructs
+		 */
 		~Integer() noexcept = default;
 
-	////// END DECLARATION Integer Constructors, Copy, Move, Destructors
+	// END DECLARATION Integer Constructors, Copy, Move, Destructors
 
 
-	////// BEGIN DECLARATION Integer Operations
+	// BEGIN DECLARATION Integer Operations
 
 	private:
+		/**
+		 * Returns new empty integer normalized to actual width
+		 * @tparam Width_ New integer width
+		 * @param actual_width New integer actual width
+		 * @return Integer
+		 */
 		template<t_Width Width_>
 		static Integer<Width_> Get_Normalized_New(t_Width actual_width) noexcept;
 
+		/**
+		 * Returns existing integer normalized to actual width
+		 * @tparam Width_ Integer Width
+		 * @tparam New_Width New Integer Width
+		 * @param integer Integer
+		 * @param actual_width Actual Width
+		 * @return Existing integer normalized to actual width
+		 */
 		template<t_Width Width_, t_Width New_Width>
 		static Integer<New_Width> Get_Normalized_Existing(const Integer<Width_> &integer, t_Width actual_width) noexcept;
 
-		template<t_Width Lhs_Width, t_Width Rhs_Width>
+		// NOT IN USE - compiler errors
+		/*template<t_Width Lhs_Width, t_Width Rhs_Width>
 		static std::pair<Integer<Get_Max(Lhs_Width, Rhs_Width)>, Integer<Get_Max(Lhs_Width, Rhs_Width)>>
-		Get_Normalized_Operands(const Integer<Lhs_Width> &lhs, const Integer<Lhs_Width> &rhs) noexcept;
+		Get_Normalized_Operands(const Integer<Lhs_Width> &lhs, const Integer<Lhs_Width> &rhs) noexcept;*/
 
+		// NOT IN USE - compiler errors
 		/*template<t_Width Lhs_Width, t_Width Rhs_Width>
 		static std::pair<Integer<Get_Max(Lhs_Width, Rhs_Width)>, Integer<Get_Max(Lhs_Width, Rhs_Width)>>
 		Get_Normalized_Positive_Operands(const Integer<Lhs_Width> &lhs, const Integer<Lhs_Width> &rhs) noexcept;*/
 
+		/**
+		 * Performs addition of lhs and rhs
+		 * @tparam Lhs_Width lhs width
+		 * @tparam Rhs_Width rhs width
+		 * @param lhs lhs
+		 * @param rhs rhs
+		 * @param overflow_flag Flag to set on overflow
+		 * @param carry_flag Flag to set on result with set carry
+		 * @return Result
+		 */
 		template<t_Width Lhs_Width, t_Width Rhs_Width>
 		static Integer<Get_Max(Lhs_Width, Rhs_Width)>
 		Add(const Integer<Lhs_Width> &lhs, const Integer<Rhs_Width> &rhs, bool &overflow_flag, bool &carry_flag);
 
+		/**
+		 * Performs multiplication of lhs and rhs
+		 * @tparam Lhs_Width lhs width
+		 * @tparam Rhs_Width rhs width
+		 * @param lhs lhs
+		 * @param rhs rhs
+		 * @param overflow_flag Flag to set on overflow
+		 * @return Result
+		 */
 		template<t_Width Lhs_Width, t_Width Rhs_Width>
 		static Integer<Get_Max(Lhs_Width, Rhs_Width)>
 		Mul(const Integer<Lhs_Width> &lhs, const Integer<Rhs_Width> &rhs, bool &overflow_flag);
 
+		/**
+		 * Performs division with remainder of lhs and rhs
+		 * @tparam Lhs_Width lhs width
+		 * @tparam Rhs_Width rhs width
+		 * @param lhs lhs
+		 * @param rhs rhs
+		 * @return Quotient, Remainder
+		 */
 		template<t_Width Lhs_Width, t_Width Rhs_Width>
 		static std::pair<Integer<Get_Max(Lhs_Width, Rhs_Width)>, Integer<Get_Max(Lhs_Width, Rhs_Width)>>
 		Div_Mod(const Integer<Lhs_Width> &lhs, const Integer<Rhs_Width> &rhs);
 
-	////// END DECLARATION Integer Operations
+	// END DECLARATION Integer Operations
 
 
-	////// BEGIN DECLARATION Integer Operators
+	// BEGIN DECLARATION Integer Operators
 
 	private:
-		bool operator[](std::size_t idx) const noexcept;
-		std::bitset<kWord_Bits_Cnt>::reference operator[](std::size_t idx) noexcept;
+		/**
+		 * Returns idx'th bit
+		 * @param idx Index
+		 * @return Idx'th bit
+		 */
+		inline bool operator[](std::size_t idx) const noexcept;
+		/**
+		 * Returns reference to idx'th bit
+		 * @param idx Index
+		 * @return Idx'th bit
+		 */
+		inline std::bitset<kWord_Bits_Cnt>::reference operator[](std::size_t idx) noexcept;
 
+		/**
+		 * Left shifts bits
+		 * Uses actual width
+		 * @param shift Shift
+		 * @return Shifted integer
+		 */
 		Integer operator<<(size_t shift) const noexcept;
+		/**
+		 * In-place left shifts bits
+		 * Uses actual width
+		 * @param shift Shift
+		 */
 		void operator<<=(size_t shift) noexcept;
+		/**
+		 * Right shifts bits
+		 * @param shift Shift
+		 * @return Shifted integer
+		 */
 		Integer operator>>(size_t shift) const noexcept;
+		/**
+		 * In-place right shifts bits
+		 * @param shift Shift
+		 */
 		void operator>>=(size_t shift) noexcept;
 
 	public:
+		/**
+		 * Compares integers on equality
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return Bool
+		 */
 		template<t_Width Rhs_Width>
 		bool operator==(const Integer<Rhs_Width> &rhs) const noexcept;
+		/**
+		 * Compares integers on inequality
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return Bool
+		 */
 		template<t_Width Rhs_Width>
 		bool operator!=(const Integer<Rhs_Width> &rhs) const noexcept;
 
+		/**
+		 * Returns opposite value of the integer
+		 * @return Opposite value
+		 */
 		Integer operator-() const noexcept;
 
+		/**
+		 * Returns lhs + rhs
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return lhs + rhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer<Get_Max(Width, Rhs_Width)> operator+(const Integer<Rhs_Width> &rhs) const;
+		/**
+		 * In-place adds rhs to lhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 */
 		template<t_Width Rhs_Width>
 		void operator+=(const Integer<Rhs_Width> &rhs);
 
+		/**
+		 * Increments
+		 * @return This
+		 */
 		Integer &operator++();
+		/**
+		 * Decrements
+		 * @return This
+		 */
 		Integer &operator--();
 
+		/**
+		 * Returns lhs - rhs
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return lhs - rhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer<Get_Max(Width, Rhs_Width)> operator-(const Integer<Rhs_Width> &rhs) const;
+		/**
+		 * In-place subtracts rhs from lhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 */
 		template<t_Width Rhs_Width>
 		void operator-=(const Integer<Rhs_Width> &rhs);
 
+		/**
+		 * Returns lhs * rhs
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return lhs * rhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer<Get_Max(Width, Rhs_Width)> operator*(const Integer<Rhs_Width> &rhs) const;
+		/**
+		 * In-place multiplies by rhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 */
 		template<t_Width Rhs_Width>
 		void operator*=(const Integer<Rhs_Width> &rhs);
 
+		/**
+		 * Returns lhs / rhs
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return lhs / rhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer<Get_Max(Width, Rhs_Width)> operator/(const Integer<Rhs_Width> &rhs) const;
+		/**
+		 * In-place divides by rhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 */
 		template<t_Width Rhs_Width>
 		void operator/=(const Integer<Rhs_Width> &rhs);
 
+		/**
+		 * Returns lhs % rhs
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 * @return lhs % rhs
+		 */
 		template<t_Width Rhs_Width>
 		Integer<Get_Max(Width, Rhs_Width)> operator%(const Integer<Rhs_Width> &rhs) const;
+		/**
+		 * In-place mod by rhs
+		 * Rhs_Width must be <= Width
+		 * @tparam Rhs_Width rhs width
+		 * @param rhs rhs
+		 */
 		template<t_Width Rhs_Width>
 		void operator%=(const Integer<Rhs_Width> &rhs);
 
+		/**
+		 * Returns factorial
+		 * @return Factorial
+		 */
 		Integer Factorial() const;
 
-	////// END DECLARATION Integer Operators
+	// END DECLARATION Integer Operators
 
 
-	////// BEGIN DECLARATION Integer Serialization
+	// BEGIN DECLARATION Integer Serialization
 
 	public:
+		/**
+		 * Serializes the integer to string
+		 * @return String
+		 */
 		std::string Serialize() const noexcept;
+		/**
+		 * Deserializes the string to integer
+		 * Expects valid number string otherwise behaves undefined
+		 * @param str String
+		 * @return Integer
+		 */
 		static Integer Deserialize(const std::string &str);
 
+		/**
+		 * Serializes the integer to the output stream
+		 * @param ostream Output Stream
+		 * @param integer Integer
+		 * @return Stream
+		 */
 		friend std::ostream &operator<<(std::ostream &ostream, const Integer &integer) {
-			ostream << integer.Serialize();
-			return ostream;
+			return ostream << integer.Serialize();
 		};
 
-	////// END DECLARATION Integer Serialization
+	// END DECLARATION Integer Serialization
 
 
-	////// BEGIN DECLARATION Integer Number Constants
+	// BEGIN DECLARATION Integer Number Constants
 
 	private:
 		static const Integer<Width> kZero;
@@ -248,33 +489,83 @@ namespace mparith {
 		static const Integer<Width> kTwo;
 		static const Integer<Width> kTen;
 
-	////// END DECLARATION Integer Number Constants
+	// END DECLARATION Integer Number Constants
 
 
-	////// BEGIN DECLARATION Integer Util Functions
+	// BEGIN DECLARATION Integer Util Functions
 
 	private:
+		/**
+		 * Returns whether integer width is limited
+		 * @return Bool
+		 */
 		static consteval bool Is_Limited() noexcept;
+		/**
+		 * Returns whether integer width is unlimited
+		 * @return Bool
+		 */
 		static consteval bool Is_Unlimited() noexcept;
 
+		/**
+		 * Returns itself normalized to actual width
+		 * If positive, fills the rest with zeroes, if negative, fills the rest with ones
+		 * New_Width must be >= Width
+		 * @tparam New_Width New width
+		 * @param actual_width New actual width
+		 * @return Itself normalized to actual width
+		 */
 		template<t_Width New_Width>
 		Integer<New_Width> Get_Normalized(size_t actual_width) const noexcept;
 
+		/**
+		 * Returns actual width
+		 * @return Actual width
+		 */
 		constexpr t_Width Get_Actual_Width() const noexcept;
+		/**
+		 * Returns actual bits count
+		 * @return Actual bits count
+		 */
 		constexpr size_t Get_Actual_Bits_Cnt() const noexcept;
 
+		/**
+		 * Returns integer with inverted bits
+		 * @return Integer with inverted bits
+		 */
 		Integer Get_Inverse() const noexcept;
+		/**
+		 * Returns self's complement
+		 * @return Complement
+		 */
 		Integer Get_Complement() const noexcept;
 
+		/**
+		 * Returns index of the MSB
+		 * 0 if all bits unset
+		 * @return Index
+		 */
 		size_t Get_Msb_Idx() const noexcept;
+		/**
+		 * Returns integer's bits
+		 * Used when has limited width
+		 * @return Bitset
+		 */
 		std::bitset<kBits_Cnt> Get_Bitset() const noexcept;
 
+		/**
+		 * Returns whether is positive (>= 0)
+		 * @return Bool
+		 */
 		bool Is_Positive() const noexcept;
+		/**
+		 * Returns itself positive
+		 * @return Itself positive
+		 */
 		Integer Get_Positive() const noexcept;
 
-	////// END DECLARATION Integer Util Functions
+	// END DECLARATION Integer Util Functions
 
-	////// BEGIN DECLARATION Integer Asserts
+	// BEGIN DECLARATION Integer Asserts
 
 	private:
 		template<t_Width Rhs_Width>
@@ -297,19 +588,19 @@ namespace mparith {
 			static_assert(Bits_Cnt % kWord_Bits_Cnt == 0, "Width must be divisible by word");
 		}
 
-	////// END DECLARATION Integer Asserts
+	// END DECLARATION Integer Asserts
 
 	private:
 		std::vector<std::bitset<kWord_Bits_Cnt>> _bits;
 
 	};
 
-	///// END DECLARATION Integer
+	// END DECLARATION Integer
 
 
 
 
-	///// BEGIN DEFINITION Util Functions
+	// BEGIN DEFINITION Util Functions
 
 	constexpr t_Width Get_Max(const t_Width lhs, const t_Width rhs) noexcept {
 		return std::max(lhs, rhs);
@@ -319,14 +610,14 @@ namespace mparith {
 		return width == kUnlimited;
 	}
 
-	///// END DEFINITION Util Functions
+	// END DEFINITION Util Functions
 
 
 
 
-	///// BEGIN DEFINITION Integer
+	// BEGIN DEFINITION Integer
 
-	////// BEGIN DEFINITION Integer Constructors, Copy, Move, Destructors
+	// BEGIN DEFINITION Integer Constructors, Copy, Move, Destructors
 
 	template<t_Width Width>
 	Integer<Width>::Integer() noexcept {
@@ -391,12 +682,12 @@ namespace mparith {
 		return *this;
 	}
 
-	////// END DEFINITION Integer Constructors, Copy, Move, Destructors
+	// END DEFINITION Integer Constructors, Copy, Move, Destructors
 
 
-	////// BEGIN DEFINITION Integer Operations
+	// BEGIN DEFINITION Integer Operations
 
-	template<t_Width Width>
+	/*template<t_Width Width>
 	template<t_Width Lhs_Width, t_Width Rhs_Width>
 	std::pair<Integer<Get_Max(Lhs_Width, Rhs_Width)>, Integer<Get_Max(Lhs_Width, Rhs_Width)>>
 	Integer<Width>::Get_Normalized_Operands(const Integer<Lhs_Width> &lhs, const Integer<Lhs_Width> &rhs) noexcept {
@@ -407,7 +698,7 @@ namespace mparith {
 			lhs.template Get_Normalized<Result_Width>(Result_Actual_Width),
 			rhs.template Get_Normalized<Result_Width>(Result_Actual_Width)
 		};
-	}
+	}*/
 
 	/*template<t_Width Width>
 	template<t_Width Lhs_Width, t_Width Rhs_Width>
@@ -440,19 +731,19 @@ namespace mparith {
 		}
 
 		if constexpr (result.Is_Unlimited()) {
-			if (left.Is_Positive() && right.Is_Positive() && !result.Is_Positive()) {
-				result._bits.emplace_back();
+			if (left.Is_Positive() && right.Is_Positive() && !result.Is_Positive()) { // limited width overflow, acts as negative, should be positive
+				result._bits.emplace_back(); // append zeroes
 			}
-			else if (!left.Is_Positive() && !right.Is_Positive() && result.Is_Positive()) {
+			else if (!left.Is_Positive() && !right.Is_Positive() && result.Is_Positive()) { // limited width overflow, acts as positive, should be negative
 				std::bitset<kWord_Bits_Cnt> bitset;
 				bitset.set();
-				result._bits.push_back(bitset);
+				result._bits.push_back(bitset); // append ones
 			}
 		}
 
 		if constexpr (result.Is_Limited()) {
 			if ((left.Is_Positive() && right.Is_Positive() && !result.Is_Positive()) ||
-				(!left.Is_Positive() && !right.Is_Positive() && result.Is_Positive())) {
+				(!left.Is_Positive() && !right.Is_Positive() && result.Is_Positive())) { // limited width overflow
 				overflow_flag = true;
 			}
 		}
@@ -475,9 +766,11 @@ namespace mparith {
 		//auto [left, right] = Get_Normalized_Positive_Operands<Lhs_Width, Rhs_Width>(lhs, rhs);
 		Integer<Result_Width> left = Get_Normalized_Existing<Lhs_Width, Result_Width>(lhs.Get_Positive(), Result_Actual_Width);
 		Integer<Result_Width> right = Get_Normalized_Existing<Rhs_Width, Result_Width>(rhs.Get_Positive(), Result_Actual_Width);
+		// work with positive operands
 
 		Integer<Result_Width> result;
 		if constexpr (result.Is_Unlimited()) {
+			// work with extended actual width to easily handle limited width overflow
 			const t_Width Extended_Result_Actual_Width = 2 * Get_Max(lhs.Get_Actual_Width(), rhs.Get_Actual_Width());
 			left = Get_Normalized_Existing<Result_Width, Result_Width>(left, Extended_Result_Actual_Width);
 			right = Get_Normalized_Existing<Result_Width, Result_Width>(right, Extended_Result_Actual_Width);
@@ -495,7 +788,7 @@ namespace mparith {
 		}
 
 		if constexpr (result.Is_Limited()) {
-			if (carry_flag || !result.Is_Positive()) {
+			if (carry_flag || !result.Is_Positive()) { // limited width overflow
 				overflow_flag = true;
 			}
 		}
@@ -507,6 +800,7 @@ namespace mparith {
 				integer._bits.resize(size);
 			};
 
+			// shrink to only necessary size to represent the arbitrary large integer
 			Shrink(result);
 		}
 
@@ -538,6 +832,7 @@ namespace mparith {
 		//const auto [numerator, denominator] = Get_Normalized_Positive_Operands<Lhs_Width, Rhs_Width>(lhs, rhs);
 		const Integer<Result_Width> numerator = Get_Normalized_Existing<Lhs_Width, Result_Width>(lhs.Get_Positive(), Result_Actual_Width);
 		const Integer<Result_Width> denominator = Get_Normalized_Existing<Rhs_Width, Result_Width>(rhs.Get_Positive(), Result_Actual_Width);
+		// work with positive operands
 
 		Integer<Result_Width> quotient = Get_Normalized_New<Result_Width>(Result_Actual_Width);
 		Integer<Result_Width> remainder = Get_Normalized_New<Result_Width>(Result_Actual_Width);
@@ -564,18 +859,18 @@ namespace mparith {
 		}
 	}
 
-	////// END DEFINITION Integer Operations
+	// END DEFINITION Integer Operations
 
 
-	////// BEGIN DEFINITION Integer Operators
+	// BEGIN DEFINITION Integer Operators
 
 	template<t_Width Width>
-	bool Integer<Width>::operator[](const size_t idx) const noexcept {
+	inline bool Integer<Width>::operator[](const size_t idx) const noexcept {
 		return _bits[idx / kWord_Bits_Cnt][idx % kWord_Bits_Cnt];
 	}
 
 	template<t_Width Width>
-	std::bitset<kWord_Bits_Cnt>::reference Integer<Width>::operator[](const size_t idx) noexcept {
+	inline std::bitset<kWord_Bits_Cnt>::reference Integer<Width>::operator[](const size_t idx) noexcept {
 		return _bits[idx / kWord_Bits_Cnt][idx % kWord_Bits_Cnt];
 	}
 
@@ -788,10 +1083,10 @@ namespace mparith {
 		return result;
 	}
 
-	////// END DEFINITION Integer Operators
+	// END DEFINITION Integer Operators
 
 
-	////// BEGIN DEFINITION Integer Serialization
+	// BEGIN DEFINITION Integer Serialization
 
 	template<t_Width Width>
 	std::string Integer<Width>::Serialize() const noexcept {
@@ -863,16 +1158,10 @@ namespace mparith {
 		}
 	}
 
-	/*template<t_Width Width>
-	std::ostream &operator<<(std::ostream &ostream, const Integer<Width> &integer) {
-		ostream << integer.Serialize();
-		return ostream;
-	}*/
-
-	////// END DEFINITION Integer Serialization
+	// END DEFINITION Integer Serialization
 
 
-	////// BEGIN DEFINITION Integer Number Constants
+	// BEGIN DEFINITION Integer Number Constants
 
 	template<t_Width Width>
 	const Integer<Width> Integer<Width>::kZero = Integer<Width>{};
@@ -913,10 +1202,10 @@ namespace mparith {
 		return integer.template Get_Normalized<New_Width>(actual_width);
 	}
 
-	////// END DEFINITION Integer Number Constants
+	// END DEFINITION Integer Number Constants
 
 
-	////// BEGIN DEFINITION Integer Util Functions
+	// BEGIN DEFINITION Integer Util Functions
 
 	template<t_Width Width>
 	consteval bool Integer<Width>::Is_Limited() noexcept {
@@ -1027,9 +1316,8 @@ namespace mparith {
 		}
 	}
 
+	// END DEFINITION Integer Util Functions
 
-	////// END DEFINITION Integer Util Functions
-
-	///// END DEFINITION Integer
+	// END DEFINITION Integer
 
 }
