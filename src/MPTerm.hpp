@@ -10,37 +10,80 @@
 #include "mparith.hpp"
 
 
+/**
+ * Terminal
+ * @tparam Precision Arithmetic Precision [B]
+ */
 template<mparith::t_Width Precision>
 class MPTerm {
 public:
+	/**
+	 * Runs a terminal
+	 * @param istream Input commands stream
+	 * @param ostream Output stream
+	 */
 	static void Run(std::istream &istream, std::ostream &ostream) noexcept;
 
 private:
+	/**
+	 * Terminal Operation Type
+	 */
 	using t_MPTermOp = std::function<void (MPTerm &)>;
 
-	static const std::string kWhitespaces;
+	/** Whitespaces */
+	inline static const std::string kWhitespaces{" \t\n\r"};
+	/**
+	 * Bank Size
+	 */
 	static constexpr size_t kBank_Size = 5;
 
 private:
+	/**
+	 * Transparently constructs
+	 * @param ostream Output stream
+	 */
 	explicit MPTerm(std::ostream &ostream) noexcept;
 
+	/**
+	 * Based on provided symbol either returns
+	 * - integer represented by the provided number or
+	 * - integer from bank if it is a placeholder
+	 * @param sym Symbol (number or $#)
+	 * @return Integer
+	 */
 	mparith::Integer<Precision> Get_Number(const std::string &sym) const;
+	/**
+	 * Saves an integer to the bank
+	 * @param integer Integer
+	 */
 	void Save_Result(const mparith::Integer<Precision> &integer) noexcept;
+	/**
+	 * Prints latest result stored in the bank
+	 */
 	void Print_Latest_Result() const;
+	/**
+	 * Prints prompt symbol
+	 */
 	void Prompt() const noexcept;
 
+	/**
+	 * Strips leading and trailing whitespaces
+	 * @param str String
+	 * @return Stripped string
+	 */
 	static std::string Strip_Whitespaces(const std::string &str);
+	/**
+	 * Parses a terminal command and returns a Terminal Operation
+	 * @param cmd Command
+	 * @return Operation
+	 */
 	static t_MPTermOp Parse_Cmd(const std::string &cmd);
 
 private:
 	std::ostream &_ostream;
-
 	std::deque<mparith::Integer<Precision>> _bank;
 
 };
-
-template<mparith::t_Width Precision>
-const std::string MPTerm<Precision>::kWhitespaces{" \t\n\r"};
 
 template<mparith::t_Width Precision>
 mparith::Integer<Precision> MPTerm<Precision>::Get_Number(const std::string &sym) const {
@@ -89,12 +132,12 @@ void MPTerm<Precision>::Run(std::istream &istream, std::ostream &ostream) noexce
 		try {
 			const t_MPTermOp op = Parse_Cmd(cmd);
 			op(mpterm);
-			mpterm.Prompt();
 		}
 		catch (const std::exception &e) {
 			ostream << "[ERROR] " << e.what() << std::endl;
-			mpterm.Prompt();
 		}
+
+		mpterm.Prompt();
 	}
 }
 
