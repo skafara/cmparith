@@ -7,8 +7,8 @@
 void Print_Help() {
 	std::cout << "Usage:" << std::endl;
 	std::cout << "\tmpcalc <mode>" << std::endl << std::endl;
-	std::cout << "\t<mode>\t- 1: Terminal [Unlimited Precision]" << std::endl;
-	std::cout << "\t\t- 2: Terminal [32B Precision]" << std::endl;
+	std::cout << "\t<mode>\t- 1: Terminal [Integer Unlimited Precision]" << std::endl;
+	std::cout << "\t\t- 2: Terminal [Integer 32B Precision]" << std::endl;
 	std::cout << "\t\t- 3: mparith Library Showcase" << std::endl;
 }
 
