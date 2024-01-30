@@ -148,10 +148,10 @@ int main(int argc, char **argv) {
 	}
 	else {
 		if (mode_match[0] == "1") {
-			MPTerm<mparith::kUnlimited>::Run(std::cin, std::cout);
+			MPTerm<mparith::Integer<mparith::kUnlimited>>::Run(std::cin, std::cout);
 		}
 		else if (mode_match[0] == "2") {
-			MPTerm<32>::Run(std::cin, std::cout);
+			MPTerm<mparith::Integer<32>>::Run(std::cin, std::cout);
 		}
 		else {
 			Showcase();

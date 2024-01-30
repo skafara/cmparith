@@ -11,10 +11,32 @@
 
 
 /**
- * Terminal
- * @tparam Precision Arithmetic Precision [B]
+ * Terminal Number Type Constraints
+ * @tparam T Type
  */
-template<mparith::t_Width Precision>
+template<typename T>
+concept MPTerm_Number = requires(T t, std::string str, std::ostream &ostream) {
+	{ T{str} } -> std::same_as<T>; // constructible from string
+	{ T{t} } -> std::same_as<T>; // copy constructible
+	{ t = t } -> std::same_as<T &>; // copy assignable
+	{ T{std::move(t)} } -> std::same_as<T>; // move constructible
+	{ t = std::move(t) } -> std::same_as<T &>; // move assignable
+
+	{ t + t } -> std::same_as<T>;
+	{ t - t } -> std::same_as<T>;
+	{ t * t } -> std::same_as<T>;
+	{ t / t } -> std::same_as<T>;
+	{ t % t } -> std::same_as<T>;
+	{ t.Factorial() } -> std::same_as<T>;
+
+	{ ostream << t } -> std::same_as<std::ostream &>; // serializable to output stream
+};
+
+/**
+ * Terminal
+ * @tparam Number Number type to be worked with
+ */
+template<MPTerm_Number Number>
 class MPTerm {
 public:
 	/**
@@ -46,17 +68,17 @@ private:
 
 	/**
 	 * Based on provided symbol either returns
-	 * - integer represented by the provided number or
-	 * - integer from bank if it is a placeholder
+	 * - number represented by the provided number or
+	 * - number from bank if it is a placeholder
 	 * @param sym Symbol (number or $#)
-	 * @return Integer
+	 * @return Number
 	 */
-	mparith::Integer<Precision> Get_Number(const std::string &sym) const;
+	Number Get_Number(const std::string &sym) const;
 	/**
-	 * Saves an integer to the bank
-	 * @param integer Integer
+	 * Saves a number to the bank
+	 * @param number Number
 	 */
-	void Save_Result(const mparith::Integer<Precision> &integer) noexcept;
+	void Save_Result(const Number &number) noexcept;
 	/**
 	 * Prints latest result stored in the bank
 	 */
@@ -81,12 +103,12 @@ private:
 
 private:
 	std::ostream &_ostream;
-	std::deque<mparith::Integer<Precision>> _bank;
+	std::deque<Number> _bank;
 
 };
 
-template<mparith::t_Width Precision>
-mparith::Integer<Precision> MPTerm<Precision>::Get_Number(const std::string &sym) const {
+template<MPTerm_Number Number>
+Number MPTerm<Number>::Get_Number(const std::string &sym) const {
 	if (sym.starts_with('$')) {
 		const size_t num = sym[1] - '0';
 		if (_bank.size() < num) {
@@ -100,22 +122,22 @@ mparith::Integer<Precision> MPTerm<Precision>::Get_Number(const std::string &sym
 	}
 }
 
-template<mparith::t_Width Precision>
-void MPTerm<Precision>::Save_Result(const mparith::Integer<Precision> &integer) noexcept {
+template<MPTerm_Number Number>
+void MPTerm<Number>::Save_Result(const Number &number) noexcept {
 	if (_bank.size() >= kBank_Size) {
 		_bank.pop_back();
 	}
-	_bank.push_front(integer);
+	_bank.push_front(number);
 }
 
-template<mparith::t_Width Precision>
-void MPTerm<Precision>::Print_Latest_Result() const {
+template<MPTerm_Number Number>
+void MPTerm<Number>::Print_Latest_Result() const {
 	_ostream << "$1 = " << _bank.front() << std::endl;
 }
 
-template<mparith::t_Width Precision>
-void MPTerm<Precision>::Run(std::istream &istream, std::ostream &ostream) noexcept {
-	MPTerm<Precision> mpterm{ostream};
+template<MPTerm_Number Number>
+void MPTerm<Number>::Run(std::istream &istream, std::ostream &ostream) noexcept {
+	MPTerm<Number> mpterm{ostream};
 	mpterm.Prompt();
 	for (std::string line; std::getline(istream, line);) {
 		const std::string cmd = Strip_Whitespaces(line);
@@ -141,18 +163,18 @@ void MPTerm<Precision>::Run(std::istream &istream, std::ostream &ostream) noexce
 	}
 }
 
-template<mparith::t_Width Precision>
-MPTerm<Precision>::MPTerm(std::ostream &ostream) noexcept : _ostream(ostream) {
+template<MPTerm_Number Number>
+MPTerm<Number>::MPTerm(std::ostream &ostream) noexcept : _ostream(ostream) {
 	//
 }
 
-template<mparith::t_Width Precision>
-void MPTerm<Precision>::Prompt() const noexcept {
+template<MPTerm_Number Number>
+void MPTerm<Number>::Prompt() const noexcept {
 	_ostream << "> ";
 }
 
-template<mparith::t_Width Precision>
-std::string MPTerm<Precision>::Strip_Whitespaces(const std::string &str) {
+template<MPTerm_Number Number>
+std::string MPTerm<Number>::Strip_Whitespaces(const std::string &str) {
 	const size_t begin = str.find_first_not_of(kWhitespaces);
 	if (begin == std::string::npos) {
 		return "";
@@ -161,8 +183,8 @@ std::string MPTerm<Precision>::Strip_Whitespaces(const std::string &str) {
 	return str.substr(begin, end - begin + 1);
 }
 
-template<mparith::t_Width Precision>
-MPTerm<Precision>::t_MPTermOp MPTerm<Precision>::Parse_Cmd(const std::string &cmd) {
+template<MPTerm_Number Number>
+MPTerm<Number>::t_MPTermOp MPTerm<Number>::Parse_Cmd(const std::string &cmd) {
 	if (cmd == "bank") {
 		return [] (MPTerm &mpterm) {
 			for (size_t i = 0; i < mpterm._bank.size(); ++i) {
@@ -179,7 +201,7 @@ MPTerm<Precision>::t_MPTermOp MPTerm<Precision>::Parse_Cmd(const std::string &cm
 
 		const std::string num_sym{match[1].matched ? match[1] : match[2]};
 		return [num_sym] (MPTerm &mpterm) {
-			const mparith::Integer result = mpterm.Get_Number(num_sym).Factorial();
+			const Number result = mpterm.Get_Number(num_sym).Factorial();
 			mpterm.Save_Result(result);
 			mpterm.Print_Latest_Result();
 		};
@@ -194,7 +216,7 @@ MPTerm<Precision>::t_MPTermOp MPTerm<Precision>::Parse_Cmd(const std::string &cm
 		const std::string num1_sym = match[1];
 		const std::string num2_sym = match[6];
 
-		using t_Num_Op = std::function<mparith::Integer<Precision> (const mparith::Integer<Precision> &, const mparith::Integer<Precision> &)>;
+		using t_Num_Op = std::function<Number (const Number &, const Number &)>;
 
 		const std::string op_sym = match[5];
 		t_Num_Op op;
@@ -225,7 +247,7 @@ MPTerm<Precision>::t_MPTermOp MPTerm<Precision>::Parse_Cmd(const std::string &cm
 		}
 
 		return [num1_sym, op, num2_sym] (MPTerm &mpterm) {
-			const mparith::Integer result = op(mpterm.Get_Number(num1_sym), mpterm.Get_Number(num2_sym));
+			const Number result = op(mpterm.Get_Number(num1_sym), mpterm.Get_Number(num2_sym));
 			mpterm.Save_Result(result);
 			mpterm.Print_Latest_Result();
 		};
