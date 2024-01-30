@@ -131,7 +131,7 @@ namespace mparith {
 
 	// BEGIN DECLARATION Integer Constants
 
-	public:
+	private:
 		/**
 		 * Integer Bits Count
 		 */
@@ -551,7 +551,7 @@ namespace mparith {
 		 * Used when has limited width
 		 * @return Bitset
 		 */
-		std::bitset<Integer::kBits_Cnt> Get_Bitset() const noexcept;
+		std::bitset<Integer<Width>::kBits_Cnt> Get_Bitset() const noexcept;
 
 		/**
 		 * Returns whether is positive (>= 0)
