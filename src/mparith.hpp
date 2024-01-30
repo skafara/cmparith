@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <bitset>
 #include <algorithm>
 #include <stack>
 #include <sstream>
