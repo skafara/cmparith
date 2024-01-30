@@ -551,7 +551,7 @@ namespace mparith {
 		 * Used when has limited width
 		 * @return Bitset
 		 */
-		std::bitset<kBits_Cnt> Get_Bitset() const noexcept;
+		std::bitset<Integer::kBits_Cnt> Get_Bitset() const noexcept;
 
 		/**
 		 * Returns whether is positive (>= 0)
