@@ -131,7 +131,7 @@ namespace mparith {
 
 	// BEGIN DECLARATION Integer Constants
 
-	private:
+	public:
 		/**
 		 * Integer Bits Count
 		 */
