@@ -777,7 +777,7 @@ namespace mparith {
 			right = Get_Normalized_Existing<Result_Width, Result_Width>(right, Extended_Result_Actual_Width);
 		}
 
-		bool _, carry_flag;
+		bool _, carry_flag = false;
 		const size_t right_msb = right.Get_Msb_Idx();
 		for (size_t i = 0; i <= right_msb; ++i) {
 			if (right[0]) {
